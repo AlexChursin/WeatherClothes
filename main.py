@@ -19,7 +19,7 @@ def custom_openapi():
         return app.openapi_schema
     openapi_schema = get_openapi(
         title="WeatherClothes API",
-        version="0.0.2",
+        version="0.1.0",
         description="This is a OpenAPI schema WeatherClothes APPS",
         routes=app.routes,
     )
@@ -36,4 +36,4 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(weather_router)
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=9000, debug=True)
+    uvicorn.run(app, host="127.0.0.1", port=9000, debug=False)
