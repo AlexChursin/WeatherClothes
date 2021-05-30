@@ -14,14 +14,20 @@ class Main(BaseModel):
     temp_kf: float
 
 
+class WeatherClothes(BaseModel):
+    url: str = Field(..., description='ссылка на фото', title='ссылка на фото', example='https://daily...imag1.png')
+    redirect_url: str = Field(..., description='ссылка на магазин', title='ссылка', example='https://lamoda-shop.com/qwerty/1/2')
+
+
+
 class WeatherItem(BaseModel):
     main: str = Field(..., description='описание', title='тип погоды', example='Rain')
     description: str = Field(..., description='подробное описание', title='тип погоды', example='light rain')
-    clothes_list: List[str] = Field(..., description='фотографии одежды под погоду', title='список ссылок на фото',
-                                    example=['https://daily...imag1.png',
-                                             'https://daily...imag2.png',
-                                             'https://daily...imag3.png',
-                                             'https://daily...imag4.png', ])
+    clothes_list: List[WeatherClothes] = Field(..., description='фотографии одежды под погоду и их ссылки', title='список ссылок',
+                                    example=[WeatherClothes(url='https://dailydressme.com/_next/image?url=https%sme.com%23793ffd6ac3c746377a5a6a8f86d24%2.jpg', redirect_url='https://lamoda-shop.com/qwerty/1/2'),
+                                             WeatherClothes(url='https://dailydressme.com/_next/image?url=https%300xc3c746377a5a6a8f86d24%2.png', redirect_url='https://lamoda-shop.com/qwerty/2/2'),
+                                             WeatherClothes(url='https://dailydressme.com/_next/image?url=https%3A%2F%22F353793ffd6ac3c746377a5a6a8f86d24%2.png', redirect_url='https://lamoda-shop.com/qwerty/3/2'),
+                                             WeatherClothes(url='https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydr537936a8f86d24%2.png', redirect_url='https://lamoda-shop.com/qwerty/4/2'), ])
     icon: str = Field(..., description='название картинки', title='картинка погоды',
                       example='02d')
     icon_src: str = Field(..., description='ссылка на картинку', title='картинка погоды',

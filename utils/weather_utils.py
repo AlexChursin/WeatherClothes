@@ -1,16 +1,21 @@
-from model import WeatherMainAnswer, WeatherAnswer
+from typing import List
+
+import aiohttp
+import requests
+from aiocache import cached
+
+from config import API_ADMIN_HOST
+from model import WeatherMainAnswer, WeatherAnswer, WeatherClothes
 
 
-def get_clothes_list(temp: float):
-    return [
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2Fa8652e41d5a36116c72d44ae302ef151%2Fd0ed21d6%2FIgorTurtleneckTHEUPSIDEbrand-THEUPSIDE.jpg&w=3840&q=75',
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2F4b9f0c33d9e0e1375a92cedc9d74ed1f%2F1e936e0e%2FSabinaJumpsuitLVHRbrand-LVHR.jpg&w=3840&q=75',
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2Fdfa980fd753e06f83c08e255d28c3e6b%2F9ee874dd%2FTheBrooklynSweatpantCOTTONCITIZENbrand-COTTONCITIZEN.jpg&w=3840&q=75',
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2F48f0093ee7d5a56f88d10d1d8612b419%2Fba2a39af%2FPufferJacketChampionbrand-Champion.jpg&w=3840&q=75',
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2F812d09c0b6c04412d28a9d768a9e7368%2Fd162f660%2FPlutoPufferJacketToastSocietybrand-ToastSociety.jpg&w=3840&q=75',
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2Fe37a3d2541153dc3f0d7002d283ff94f%2Fa3860b58%2FRowanDress2.jpg&w=3840&q=75'
-        'https://dailydressme.com/_next/image?url=https%3A%2F%2Fdailydressme.com%2Fassets%2F200x%2Cq90%2F878b1f2faa3390643a5d25cc5c185f1e%2F03eca1a5%2FFunnelNeckSweaterSplendidbrand-Splendid.jpg&w=3840&q=75'
-    ]
+@cached(ttl=5)
+async def get_clothes_list(temp: float, weather_type: str) -> List[WeatherClothes]:
+    async with aiohttp.ClientSession() as session:
+        resp = await session.get(f"{API_ADMIN_HOST}/images?temp={temp}&weather_type={weather_type}")
+        if resp.status == 200:
+            json_data = await resp.json()
+            return [WeatherClothes(**_data) for _data in json_data]
+    return []
 
 
 time_to_word = {
@@ -49,27 +54,7 @@ def get_icon_src(icon: str) -> str:
     return icon_src[icon]
 
 
-def json_weather_to_model(weather: dict) -> dict:
-    time = weather['dt_txt'].split(' ')[1]
-    weather['weather'] = weather['weather'][0]
-    weather['time_txt_info'] = time_to_word[time]
-    weather['weather']['clothes_list'] = get_clothes_list(temp=0)
-    weather['weather']['icon_src'] = get_icon_src(weather['weather']['icon'])
-    return weather
 
 
-def get_weather(json_data: dict) -> WeatherMainAnswer:
-    weather_json_list = json_data['list']
-    day_weather_now = weather_json_list[1]['dt_txt'].split(' ')[0]
-    day_weather_list = [json_weather_to_model(weather_json_list[1])]
-    weather_json_list = weather_json_list[2:]
-    for weather in weather_json_list:
-        spl = weather['dt_txt'].split(' ')
-        date = spl[0]
-        time = spl[1]
-        if day_weather_now == date:
-            continue
-        if time == '15:00:00':  # day
-            day_weather_list.append(json_weather_to_model(weather))
-    json_data['list'] = day_weather_list
-    return WeatherMainAnswer(**json_data)
+def round_lat_lon(lat: float, lon: float):
+    return round(lat, 1), round(lon, 1)
